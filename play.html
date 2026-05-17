@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stickman Flow by Keane</title>
+    <style>
+        body {
+            margin: 0;
+            background: #111424;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            font-size: 24px;
+        }
+        #game-container {
+            position: relative;
+            border: 4px solid #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            border-radius: 8px;
+            background: #1a1d36;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            display: block;
+            background: linear-gradient(to bottom, #14162e, #1c1f3d);
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        #game-container:fullscreen {
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            border-radius: 0;
+            background: #14162e;
+        }
+        #game-container:fullscreen canvas {
+            width: 100vw;
+            height: 100vh;
+        }
+        #ui-layer {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            font-weight: bold;
+            color: #00ffff;
+            pointer-events: none;
+            text-shadow: 0 0 5px #000;
+            z-index: 10;
+        }
+        .ui-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        #high-score-display {
+            color: #ffcc00;
+            text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+        }
+        #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(16, 18, 38, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 20;
+        }
+        #game-over-screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .game-over-title {
+            color: #ff3366;
+            font-size: 32px;
+            margin: 0 0 10px 0;
+        }
+        #new-record-alert {
+            color: #ffcc00;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+            animation: blink 0.6s infinite alternate;
+            display: none;
+        }
+        @keyframes blink {
+            from { opacity: 1; text-shadow: 0 0 10px #ffcc00; }
+            to { opacity: 0.3; text-shadow: 0 0 2px #ffcc00; }
+        }
+        #final-score {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        button {
+            background: transparent;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 10px 20px;
+            font-size: 18px;
+            font-family: inherit;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            background: #00ffff;
+            color: #1a1d36;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+        }
+        #mobile-controls {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            box-sizing: border-box;
+            padding: 0 25px;
+            pointer-events: none;
+            z-index: 30;
+        }
+        .mobile-btn {
+            width: 100px;
+            height: 100px;
+            background: rgba(26, 29, 54, 0.75);
+            border: 4px solid #00ffff;
+            border-radius: 50%;
+            color: #00ffff;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        .mobile-btn:active {
+            background: #00ffff;
+            color: #1a1d36;
+            box-shadow: 0 0 30px #00ffff;
+            transform: scale(0.9);
+        }
+        #controls-hint {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #8a9fc4;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>STICKMAN FLOW BY KEANE</h1>
+
+    <div id="game-container">
+        <div id="ui-layer">
+            <div class="ui-group">
+                <div id="score-display">SCORE: 0</div>
+                <div id="high-score-display">BEST: 0</div>
+            </div>
+            <div id="flow-display">FLOW: 0%</div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
+
+        <div id="mobile-controls">
+            <div id="mobile-jump" class="mobile-btn">JUMP</div>
+            <div id="mobile-slide" class="mobile-btn">SLIDE</div>
+        </div>
+
+        <div id="game-over-screen">
+            <h2 class="game-over-title">CRASHED</h2>
+            <div id="new-record-alert">👑 NEW HIGH SCORE! 👑</div>
+            <div id="final-score">FINAL SCORE: 0</div>
+            <button id="restart-btn">RUN AGAIN</button>
+        </div>
+    </div>
+
+    <button id="fullscreen-btn" style="margin-top: 15px;">GO FULLSCREEN</button>
+
+    <div id="controls-hint">
+        <strong>Desktop:</strong> [W / Space / Up Arrow] to Jump | Hold [S / Down Arrow] to Slide<br>
+        <strong>Mobile:</strong> Use the on-screen JUMP and SLIDE buttons
+    </div>
+
+<script>
+// ============================================
+// PART 1: CLAUDE'S PHYSICS ENGINE
+// ============================================
+const GRAVITY           = 0.55;
+const JUMP_FORCE        = -12.5;
+const DOUBLE_JUMP_FORCE = -11.0;
+const GROUND_BUFFER     = 6;
+
+function handleJump() {
+    if (!input.jump) return;
+    input.jump = false;
+
+    if (player.isOnGround) {
+        player.velY = JUMP_FORCE;
+        player.isOnGround    = false;
+        player.canDoubleJump = true;
+        player.hasDoubleJumped = false;
+        addFlow(5);
+    } else if (player.canDoubleJump && !player.hasDoubleJumped) {
+        player.velY = DOUBLE_JUMP_FORCE;
+        player.hasDoubleJumped = true;
+        player.canDoubleJump   = false;
+        addFlow(8);
+    }
+}
+
+function handleSlide() {
+    const wantSlide = input.slide && player.isOnGround;
+
+    if (wantSlide && !player.isSliding) {
+        player.y += player.normalHeight - player.slideHeight;
+        player.isSliding = true;
+        player.width     = player.slideWidth;
+        player.height    = player.slideHeight;
+        addFlow(3);
+    } else if (!wantSlide && player.isSliding) {
+        player.y -= player.normalHeight - player.slideHeight;
+        player.isSliding = false;
+        player.width     = player.normalWidth;
+        player.height    = player.normalHeight;
+    }
+}
+
+function applyPhysics() {
+    player.velY += GRAVITY;
+    player.y    += player.velY;
+    if (player.y > CANVAS_H + 120) isGameOver = true;
+}
+
+function checkPlatform(p) {
+    const feet     = player.y + player.height;
+    const prevFeet = feet - player.velY;
+    const withinX  = player.x + player.width > p.x && player.x < p.x + p.width;
+    const landedOn = prevFeet <= p.y + GROUND_BUFFER && feet >= p.y;
+
+    if (withinX && landedOn && player.velY >= 0) {
+        player.y               = p.y - player.height;
+        player.velY            = 0;
+        player.isOnGround      = true;
+        player.hasDoubleJumped = false;
+        player.canDoubleJump   = false;
+        return true;
+    }
+    return false;
+}
+
+function updatePhysics() {
+    handleJump();
+    handleSlide();
+    applyPhysics();
+}
+
+// ============================================
+// PART 2: GEMINI'S ENVIRONMENT & LOOPS
+// ============================================
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const scoreDisplay = document.getElementById("score-display");
+const highScoreDisplay = document.getElementById("high-score-display");
+const gameOverScreen = document.getElementById("game-over-screen");
+const newRecordAlert = document.getElementById("new-record-alert");
+const finalScoreDisplay = document.getElementById("final-score");
+const restartBtn = document.getElementById("restart-btn");
+
+const CANVAS_H = canvas.height;
+let isGameOver = false;
+let gameSpeed = 5.5;
+
+let highScore = localStorage

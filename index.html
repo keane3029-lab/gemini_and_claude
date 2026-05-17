@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stickman Flow — WIDESCREEN</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>STICKMAN FLOW</h1>
+
+    <div id="game-container">
+        <div id="ui-layer">
+            <div id="score-display">SCORE: 0</div>
+            <div id="flow-display">FLOW: 0%</div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
+
+        <div id="mobile-controls">
+            <div id="mobile-jump" class="mobile-btn">JUMP</div>
+            <div id="mobile-slide" class="mobile-btn">SLIDE</div>
+        </div>
+
+        <div id="game-over-screen">
+            <h2 class="game-over-title">CRASHED</h2>
+            <div id="final-score">FINAL SCORE: 0</div>
+            <button id="restart-btn">RUN AGAIN</button>
+        </div>
+    </div>
+
+    <button id="fullscreen-btn">GO FULLSCREEN</button>
+
+    <div id="controls-hint">
+        <strong>Desktop:</strong> [W / Space / Up Arrow] to Jump | Hold [S / Down Arrow] to Slide<br>
+        <strong>Mobile:</strong> Use the on-screen JUMP and SLIDE buttons
+    </div>
+
+    <script src="physics.js"></script>
+ <script src="main.js"></script>
+   
+</body>
+</html>
